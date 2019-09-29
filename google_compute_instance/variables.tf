@@ -59,3 +59,14 @@ variable "service_account_email" {
   description = "If using a non-default service account, then set the email here"
   default = "my-service-acct@my-project.iam.gserviceaccount.com"
 }
+
+variable "use_static_ip" {
+  description = "Set this to true and support a static_ip_array to use a static IP"
+  default = 0
+}
+
+variable static_ip_array {
+  description = "provide a list of static IPs, should be the same length as qty. of nodes"
+  type = "list"
+  default = ["","",""]
+}

@@ -4,17 +4,18 @@ echo "~~~~~~~ Consul startup script - begin ~~~~~~~"
 # Set variables
 export PATH="$${PATH}:/usr/local/bin"
 export local_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)"
+export nat_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)"
 
 # Install pre-reqs
 # TODO: figure out better OS detection logic
 if [  -n "$(uname -a | grep -i Ubuntu)" ]; then
     echo "Proceeding as Ubuntu install"
-    apt-get update -y
-    apt install curl unzip -y
+    sudo apt-get update -y
+    sudo apt install curl unzip -y
 else
     echo "Proceeding as Redhat/CentOS install"
-    yum update -y
-    yum install curl unzip -y
+    sudo yum update -y
+    sudo yum install curl unzip -y
 fi  
 
 # Download consul
@@ -67,24 +68,32 @@ EOF
 
 cat <<-EOF > "$${CONSUL_CONFIG_DIR}/server.hcl"
 datacenter = "${dc}"
+primary_datacenter = "${dc}"
 data_dir = "$${CONSUL_DATA_DIR}"
 bind_addr = "$${local_ip}"
+client_addr = "0.0.0.0"
 bootstrap_expect = ${consul_server_count}
 server = true
 ui = true
 log_level = "trace"
 retry_join = ${retry_join}
+retry_join_wan = ${retry_join_wan}
+advertise_addr_wan = "$${nat_ip}"
 encrypt = "${consul_encrypt}"
 encrypt_verify_incoming = true
 encrypt_verify_outgoing = true
-ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
-cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
-key_file = "$${CONSUL_TLS_DIR}/consul.key"
+#ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
+#cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
+#key_file = "$${CONSUL_TLS_DIR}/consul.key"
 verify_incoming = false
 verify_incoming_https = false
 ports = {
-    http = -1,
-    https = 8501
+  http = 8500,
+  https = -1,
+  grpc = 8502
+}
+connect = {
+  enabled = true
 }
 EOF
 
@@ -106,11 +115,17 @@ systemctl enable consul.service
 systemctl daemon-reload
 systemctl start consul.service
 
+# Install dnsmasq
+echo "server=/consul/127.0.0.1#8600" | sudo tee /etc/dnsmasq.d/10-consul
+sudo apt-get install dnsmasq -y
+sudo systemctl enable dnsmasq
+sudo systemctl start dnsmasq
+
 # Apply Enterprise license and enable tokens
 echo "Applying enterprise license"
-export CONSUL_HTTP_ADDR="https://127.0.0.1:8501"
-export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 export CONSUL_HTTP_SSL_VERIFY=false
+export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
+#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 
 function consul_has_leader {
   try=0
@@ -142,8 +157,9 @@ echo "Consul license status: $(consul license get)"
 
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
-export CONSUL_HTTP_ADDR="https://127.0.0.1:8501"
-export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
+export CONSUL_HTTP_SSL_VERIFY=false
+export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
+#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 PROFILE
 
 echo "~~~~~~~ Consul startup script - end ~~~~~~~"

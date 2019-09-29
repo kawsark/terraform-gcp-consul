@@ -56,12 +56,12 @@ gcloud compute --project "<project-name>" ssh --zone "us-east1-b" "consul-0"
 ```
 # consul-1 server
 gcloud compute --project "<project-name>" ssh --zone "us-east1-c" "consul-1"
-export CONSUL_HTTP_ADDR=<bootstrap-acl-token>
+export CONSUL_HTTP_TOKEN=<bootstrap-acl-token>
 ./1_acl_consul.sh
 
 # consul-2 server
 gcloud compute --project "<project-name>" ssh --zone "us-east1-d" "consul-2"
-export CONSUL_HTTP_ADDR=<bootstrap-acl-token>
+export CONSUL_HTTP_TOKEN=<bootstrap-acl-token>
 ./1_acl_consul.sh
 ```
 
@@ -69,12 +69,12 @@ export CONSUL_HTTP_ADDR=<bootstrap-acl-token>
 ```
 # vault-0 server
 gcloud compute --project "<project-name>" ssh --zone "us-east1-b" "vault-0"
-export CONSUL_HTTP_ADDR=<bootstrap-acl-token>
+export CONSUL_HTTP_TOKEN=<bootstrap-acl-token>
 ./1_acl_vault.sh
 
 # vault-1 server
 gcloud compute --project "<project-name>" ssh --zone "us-east1-c" "vault-1"
-export CONSUL_HTTP_ADDR=<bootstrap-acl-token>
+export CONSUL_HTTP_TOKEN=<bootstrap-acl-token>
 ./1_acl_vault.sh
 ```
 

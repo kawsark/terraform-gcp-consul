@@ -1,14 +1,9 @@
 #!/bin/bash
-echo "~~~~~~~ Counting service startup script - begin ~~~~~~~"
+echo "~~~~~~~ App service startup script - begin ~~~~~~~"
 
 # Set variables
 export PATH="$${PATH}:/usr/local/bin"
 export local_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)"
-
-# Install pre-reqs
-echo "Proceeding as Ubuntu install"
-apt-get update -y
-apt install curl unzip -y
 
 #Install Docker
 sudo apt-get update -y
@@ -29,6 +24,10 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io -y
 sudo groupadd docker
 sudo usermod -aG docker ubuntu
 sudo systemctl enable docker
+
+# Install pre-reqs
+echo "Proceeding as Ubuntu install"
+sudo apt install curl unzip jq -y
 
 # Download vault and consul
 echo "Downloading consul and vault"
@@ -88,15 +87,17 @@ cat <<EOF | sudo tee "$${CONSUL_TLS_DIR}/consul.key"
 ${leaf_key}
 EOF
 
-export CONSUL_HTTP_ADDR="https://127.0.0.1:8501"
 export CONSUL_HTTP_SSL_VERIFY=false
-export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
+export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
+#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 
 # Write consul client configuration
 cat <<EOF > /etc/consul.d/client.hcl
 datacenter = "${dc}"
+primary_datacenter = "${dc}"
 data_dir = "$${CONSUL_DATA_DIR}"
 bind_addr = "$${local_ip}"
+client_addr = "0.0.0.0"
 server = false
 ui = true
 log_level = "trace"
@@ -104,29 +105,47 @@ retry_join = ${retry_join}
 encrypt = "${consul_encrypt}"
 encrypt_verify_incoming = true
 encrypt_verify_outgoing = true
-ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
-cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
-key_file = "$${CONSUL_TLS_DIR}/consul.key"
+#ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
+#cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
+#key_file = "$${CONSUL_TLS_DIR}/consul.key"
 verify_incoming = false
 verify_incoming_https = false
 ports = {
-    http = -1,
-    https = 8501
+  http = 8500,
+  https = -1,
+  grpc = 8502
+}
+connect = {
+  enabled = true
 }
 EOF
 
-echo "writing application file"
-cat <<EOF > "$${CONSUL_CONFIG_DIR}/dashboard.json"
+echo "writing service definition file for ${app_name}"
+cat <<EOF > "$${CONSUL_CONFIG_DIR}/${app_name}.json"
 {
-  "Name": "dashboard",
-  "Tags": [
-    "v0.0.4"
-  ],
-  "Port": 9002,
-  "Check": {
-    "Method": "GET",
-    "HTTP": "http://$${local_ip}:9002/health",
-    "Interval": "2s"
+  "service": {
+    "name": "${app_name}",
+    "tags": [
+      "${app_tag}"
+    ],
+    "port": ${app_port},
+    "connect": {
+      "sidecar_service": {
+        "proxy": {
+          "upstreams" : [{
+            "destination_name":"counting",
+            "local_bind_port":5000
+          }]
+        }
+      } 
+    },
+    "check": {
+      "id":"${app_name}-http-check",
+      "name":"HTTP health check on port ${app_port}",
+      "method": "GET",
+      "http": "http://$${local_ip}:${app_port}/health",
+      "Interval": "2s"
+    }
   }
 }
 EOF
@@ -143,20 +162,50 @@ sleep 5
 consul members
 
 # Install dnsmasq
-echo "server=/consul/127.0.0.1#8600" > /etc/dnsmasq.d/10-consul
-apt-get install dnsmasq -y
+echo "server=/consul/127.0.0.1#8600" | sudo tee /etc/dnsmasq.d/10-consul
+sudo apt-get install dnsmasq -y
 sudo systemctl enable dnsmasq
 sudo systemctl start dnsmasq
 
-# Run app container
-echo ${APP_CMD} > /tmp/app.sh
+# Run application
+echo "Starting application ${app_name}"
+echo ${app_cmd} > /tmp/app.sh
 chmod +x /tmp/app.sh
 /tmp/app.sh
 
+# Start Envoy proxy
+sleep 10
+echo "Starting application proxy"
+cat <<EOF >Dockerfile
+FROM consul:latest
+FROM envoyproxy/envoy:v1.8.0
+COPY --from=0 /bin/consul /bin/consul
+ENTRYPOINT ["dumb-init", "consul", "connect", "envoy"]
+EOF
+sudo docker build -t consul-envoy .
+sudo docker run --rm -d --network host --name ${app_name}-proxy \
+  consul-envoy -sidecar-for ${app_name}
+
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
-export CONSUL_HTTP_ADDR="https://127.0.0.1:8501"
-export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
+export CONSUL_HTTP_SSL_VERIFY=false
+export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
+#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 PROFILE
 
-echo "~~~~~~~ Counting startup script - end ~~~~~~~"
+# Start mesh gateway
+sudo docker run --rm -d --network host --name ${dc}-mesh-gateway \
+  consul-envoy -mesh-gateway -register -service "gateway-primary" \
+                                       -address "$${local_ip}:18502" \
+                                       -wan-address "$${nat_ip:18502}" \
+                                       -admin-bind 127.0.0.1:19005
+
+
+consul connect envoy -mesh-gateway -register \
+                       -service "gateway-primary" \
+                       -address "<private address>:18502" \
+                       -wan-address "<externally accessible address>:18502"\
+                       -admin-bind 127.0.0.1:19005 \
+                       -token=<bootstrap-token>
+
+echo "~~~~~~~ App startup script - end ~~~~~~~"

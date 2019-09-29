@@ -10,6 +10,7 @@ data "google_compute_zones" "available" {
 
 data "google_compute_default_service_account" "default" { }
 
+
 output "default_account" {
   value = "${data.google_compute_default_service_account.default.email}"
 }
@@ -28,9 +29,8 @@ resource "google_compute_instance" "demo" {
 
   network_interface {
     network = "default"
-
     access_config {
-      // Ephemeral IP
+      nat_ip = "${var.use_static_ip ? element(var.static_ip_array, count.index) : "" }"      
     }
   }
 

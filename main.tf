@@ -3,6 +3,7 @@ provider "google" {
   project = "${var.gcp_project}"
 }
 
+data "google_compute_default_service_account" "default" { }
 module "consul-cluster" {
   source = "./google_compute_instance"
   image  = "${var.image}"
@@ -17,7 +18,8 @@ module "consul-cluster" {
   }
 
   server_count = 3
-
+  use_static_ip               = 1
+  static_ip_array             = "${var.consul_static_ip_array}"
   gcp_project                 = "${var.gcp_project}"
   gcp_region                  = "${var.gcp_region}"
   instance_name               = "consul"
@@ -27,7 +29,7 @@ module "consul-cluster" {
   os_pd_ssd_size              = "12"
 }
 
-module "count-service" {
+module "counting-service" {
   source = "./google_compute_instance"
   image  = "${var.image}"
 
@@ -35,7 +37,7 @@ module "count-service" {
 
   labels = {
     environment = "dev"
-    app         = "count-service"
+    app         = "counting-service"
     ttl         = "24h"
     owner       = "${var.owner}"
     sequence    = "${module.consul-cluster.id[2]}"
@@ -45,10 +47,10 @@ module "count-service" {
 
   gcp_project                 = "${var.gcp_project}"
   gcp_region                  = "${var.gcp_region}"
-  instance_name               = "count-service"
+  instance_name               = "counting-service"
   use_default_service_account = 0
   service_account_email       = "${data.google_compute_default_service_account.default.email}"
-  startup_script              = "${data.template_file.count_userdata.rendered}"
+  startup_script              = "${data.template_file.counting_userdata.rendered}"
   os_pd_ssd_size              = "12"
 }
 
@@ -63,7 +65,7 @@ module "dashboard-service" {
     app         = "dashboard-service"
     ttl         = "24h"
     owner       = "${var.owner}"
-    sequence    = "${module.consul-cluster.id[2]}"
+    sequence    = "${module.counting-service.id[0]}"
   }
 
   server_count = 1
@@ -74,5 +76,31 @@ module "dashboard-service" {
   use_default_service_account = 0
   service_account_email       = "${data.google_compute_default_service_account.default.email}"
   startup_script              = "${data.template_file.dashboard_userdata.rendered}"
+  os_pd_ssd_size              = "12"
+}
+
+
+module "consul-cluster-secondary" {
+  source = "./google_compute_instance"
+  image  = "${var.image}"
+
+  tags = ["consul-${var.gcp_project}-${var.consul_dc_secondary}"]
+
+  labels = {
+    environment = "dev"
+    app         = "consul"
+    ttl         = "24h"
+    owner       = "${var.owner}"
+  }
+
+  server_count = 1
+  use_static_ip               = 1
+  static_ip_array             = "${var.consul_secondary_static_ip_array}"
+  gcp_project                 = "${var.gcp_project}"
+  gcp_region                  = "${var.gcp_region_secondary}"
+  instance_name               = "consul-docker"
+  use_default_service_account = 0
+  service_account_email       = "${data.google_compute_default_service_account.default.email}"
+  startup_script              = "${data.template_file.consul_secondary_userdata.rendered}"
   os_pd_ssd_size              = "12"
 }
