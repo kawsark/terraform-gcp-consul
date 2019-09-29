@@ -7,9 +7,9 @@ variable "gcp_region" {
   default     = "us-east1"
 }
 
-variable "create_secondary" { 
+variable "create_secondary" {
   description = "Set this to 1 to create a single Consul server in a secondary region"
-  default = 0
+  default     = 0
 }
 
 variable "gcp_region_secondary" {
@@ -29,12 +29,12 @@ variable "consul_url" {
 
 variable "create_gossip_encryption_key" {
   description = "Set this to 0 to allow a randomly generated gossip encryption key"
-  default = 1
+  default     = 1
 }
 
 variable "gossip_encryption_key" {
   description = "If create_gossip_encryption_key=1, enter your own gossip encryption key here by using consul keygen command."
-  default = ""
+  default     = ""
 }
 
 variable "image" {
@@ -62,20 +62,15 @@ variable "environment" {
   default = "lab"
 }
 
-# Optional Github private key
-variable "git_id_rsa_path" {
-  default = ".ssh/id_rsa"
-}
-
 # Optional static IP
 variable "consul_static_ip_array" {
   description = "Optionally provide an array of static IP addresses for Consul servers. Otherwise, ephemeral IPs will be assigned"
-  default = ["","","","",""]
+  default     = ["", "", "", "", ""]
 }
 
 variable "consul_secondary_static_ip_array" {
   description = "Optionally provide an array of static IP addresses for secondary Consul cluster. Otherwise, ephemeral IPs will be assigned"
-  default = ["","","","",""]
+  default     = ["", "", "", "", ""]
 }
 
 # TLS related variables

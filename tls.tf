@@ -6,9 +6,9 @@ module "root_tls_self_signed_ca" {
   source = "github.com/kawsark/tls-self-signed-cert"
 
   name              = "${var.consul_dc}-root"
-  ca_common_name    = "${var.common_name}"
-  organization_name = "${var.organization_name}"
-  common_name       = "${var.common_name}"
+  ca_common_name    = var.common_name
+  organization_name = var.organization_name
+  common_name       = var.common_name
   download_certs    = "true"
 
   validity_period_hours = "8760"
@@ -26,11 +26,11 @@ module "leaf_tls_self_signed_cert" {
   source = "github.com/kawsark/tls-self-signed-cert"
 
   name              = "${var.consul_dc}-leaf"
-  organization_name = "${var.organization_name}"
-  common_name       = "${var.common_name}"
+  organization_name = var.organization_name
+  common_name       = var.common_name
   ca_override       = true
-  ca_key_override   = "${module.root_tls_self_signed_ca.ca_private_key_pem}"
-  ca_cert_override  = "${module.root_tls_self_signed_ca.ca_cert_pem}"
+  ca_key_override   = module.root_tls_self_signed_ca.ca_private_key_pem
+  ca_cert_override  = module.root_tls_self_signed_ca.ca_cert_pem
   download_certs    = "true"
 
   validity_period_hours = "8760"
@@ -57,3 +57,4 @@ module "leaf_tls_self_signed_cert" {
     "client_auth",
   ]
 }
+

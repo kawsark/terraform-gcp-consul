@@ -42,6 +42,17 @@ consul catalog services -tags
 consul members
 ``` 
 
+### Running on Terraform Cloud
+Please install the tf helper tool: https://github.com/hashicorp-community/tf-helper
+```
+export TFE_TOKEN=<your-tfc-token>
+export TFE_ORG=<your-tfc-org>
+tfh workspace list
+tfh workspace new terraform-gcp-consul
+
+
+```
+
 ### (Optional) ACL steps
 This repo includes 3 scripts to enable Consul ACL tokens with a default deny policy. The manual steps to run them are shown below. These can potentially be automated via Configuration management.
 
