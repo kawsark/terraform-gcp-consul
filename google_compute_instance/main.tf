@@ -34,7 +34,7 @@ resource "google_compute_instance" "demo" {
     }
   }
 
-  service_account = {
+  service_account {
     email =  "${var.use_default_service_account ? "${data.google_compute_default_service_account.default.email}" : "${var.service_account_email}" }"
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
