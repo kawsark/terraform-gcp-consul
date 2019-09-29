@@ -8,8 +8,8 @@ variable "gcp_region" {
 }
 
 variable "create_secondary" {
-  description = "Set this to 1 to create a single Consul server in a secondary region"
-  default     = 0
+  description = "Set this to true to create a single Consul server in a secondary region"
+  default     = false
 }
 
 variable "gcp_region_secondary" {
@@ -29,7 +29,7 @@ variable "consul_url" {
 
 variable "create_gossip_encryption_key" {
   description = "Set this to 0 to allow a randomly generated gossip encryption key"
-  default     = 1
+  default     = true
 }
 
 variable "gossip_encryption_key" {

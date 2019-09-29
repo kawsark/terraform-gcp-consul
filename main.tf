@@ -20,7 +20,7 @@ module "consul-cluster" {
   }
 
   server_count                = 3
-  use_static_ip               = 1
+  use_static_ip               = true
   static_ip_array             = var.consul_static_ip_array
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
@@ -94,8 +94,8 @@ module "consul-cluster-secondary" {
     owner       = var.owner
   }
 
-  server_count                = 1
-  use_static_ip               = 1
+  server_count                = ${var.create_secondary ? 1 : 0}
+  use_static_ip               = true
   static_ip_array             = var.consul_secondary_static_ip_array
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region_secondary

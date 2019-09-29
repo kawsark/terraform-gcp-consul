@@ -62,7 +62,7 @@ variable "service_account_email" {
 
 variable "use_static_ip" {
   description = "Set this to true and support a static_ip_array to use a static IP"
-  default = 0
+  default = false
 }
 
 variable static_ip_array {
