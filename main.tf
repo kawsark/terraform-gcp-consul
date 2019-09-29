@@ -94,7 +94,7 @@ module "consul-cluster-secondary" {
     owner       = var.owner
   }
 
-  server_count                = ${var.create_secondary ? 1 : 0}
+  server_count                = var.create_secondary ? 1 : 0
   use_static_ip               = true
   static_ip_array             = var.consul_secondary_static_ip_array
   gcp_project                 = var.gcp_project
