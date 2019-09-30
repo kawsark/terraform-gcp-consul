@@ -201,6 +201,6 @@ export external_ip="$(curl -H "Metadata-Flavor: Google" http://metadata.google.i
 
 sudo docker run -d --network host --name gateway-${dc} \
   consul-envoy -mesh-gateway -register -service "gateway-${dc}" \
-  -address "${local_ip}:18502" -wan-address "${external_ip}:18502" -admin-bind 127.0.0.1:19005 
+  -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 127.0.0.1:19005 
 
 echo "~~~~~~~ App startup script - end ~~~~~~~"
