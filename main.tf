@@ -42,7 +42,7 @@ module "counting-service" {
     app         = "counting-service"
     ttl         = "24h"
     owner       = var.owner
-    sequence    = module.consul-cluster.id[2]
+    sequence    = module.consul-cluster[2].id
   }
 
   server_count = 1
@@ -67,7 +67,7 @@ module "dashboard-service" {
     app         = "dashboard-service"
     ttl         = "24h"
     owner       = var.owner
-    sequence    = module.counting-service.id[0]
+    sequence    = module.counting-service[2].id
   }
 
   server_count = 1
