@@ -188,6 +188,8 @@ sudo docker build -t consul-envoy .
 # Re-register in case there was an issue with Envoy setup
 sleep 5
 consul services register /etc/consul.d/dashboard.json
+sudo docker run --rm -d --network host --name ${app_name}-proxy \
+  consul-envoy -sidecar-for ${app_name}
 
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
