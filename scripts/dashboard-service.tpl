@@ -183,8 +183,10 @@ COPY --from=0 /bin/consul /bin/consul
 ENTRYPOINT ["dumb-init", "consul", "connect", "envoy"]
 EOF
 sudo docker build -t consul-envoy .
-sudo docker run --rm -d --network host --name ${app_name}-proxy \
-  consul-envoy -sidecar-for ${app_name}
+
+# Re-register in case there was an issue with Envoy setup
+sleep 5
+consul services register /etc/consul.d/dashboard.json
 
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
@@ -198,7 +200,7 @@ export local_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.i
 export external_ip="$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)"
 
 sudo docker run -d --network host --name gateway-${dc} \
-  consul-envoy:latest connect envoy -mesh-gateway -register -service "gateway-${dc}" \
-  -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 127.0.0.1:19005 
+  consul-envoy -mesh-gateway -register -service "gateway-${dc}" \
+  -address "${local_ip}:18502" -wan-address "${external_ip}:18502" -admin-bind 127.0.0.1:19005 
 
 echo "~~~~~~~ App startup script - end ~~~~~~~"
