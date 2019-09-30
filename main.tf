@@ -25,7 +25,7 @@ module "consul-cluster" {
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
   instance_name               = "consul"
-  use_default_service_account = 0
+  use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.consul_userdata.rendered
   os_pd_ssd_size              = "12"
@@ -50,7 +50,7 @@ module "counting-service" {
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
   instance_name               = "counting-service"
-  use_default_service_account = 0
+  use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.counting_userdata.rendered
   os_pd_ssd_size              = "12"
@@ -75,7 +75,7 @@ module "dashboard-service" {
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
   instance_name               = "dashboard-service"
-  use_default_service_account = 0
+  use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.dashboard_userdata.rendered
   os_pd_ssd_size              = "12"
@@ -100,7 +100,7 @@ module "consul-cluster-secondary" {
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region_secondary
   instance_name               = "consul-docker"
-  use_default_service_account = 0
+  use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.consul_secondary_userdata.rendered
   os_pd_ssd_size              = "12"

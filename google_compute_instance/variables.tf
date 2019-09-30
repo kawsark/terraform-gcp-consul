@@ -52,7 +52,7 @@ variable "startup_script" {
 
 variable "use_default_service_account" {
   description = "If set to 1, it will attach the default compute service account to instance."
-  default     = 1
+  default     = true
 }
 
 variable "service_account_email" {
