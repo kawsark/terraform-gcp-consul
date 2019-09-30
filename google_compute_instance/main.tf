@@ -25,6 +25,7 @@ resource "google_compute_instance" "demo" {
 
   boot_disk {
     source = google_compute_disk.os-disk[count.index].name
+    auto_delete = false
   }
 
   network_interface {
