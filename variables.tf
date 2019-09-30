@@ -50,6 +50,10 @@ variable "consul_dc" {
   default = "us-east1"
 }
 
+variable "primary_dc" {
+  default = "us-east1"
+}
+
 variable "consul_dc_secondary" {
   default = "us-central1"
 }

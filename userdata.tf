@@ -4,6 +4,7 @@ data "template_file" "consul_userdata" {
   vars = {
     consul_url          = var.consul_url
     dc                  = var.consul_dc
+    primary_dc          = var.primary_dc
     retry_join          = "[\"provider=gce zone_pattern=${var.gcp_region}-. tag_value=consul-${var.gcp_project}-${var.consul_dc}\"]"
     retry_join_wan      = "[\"${element(var.consul_secondary_static_ip_array, 0)}\"]"
     consul_server_count = var.consul_server_count

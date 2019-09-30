@@ -68,7 +68,7 @@ EOF
 
 cat <<-EOF > "$${CONSUL_CONFIG_DIR}/server.hcl"
 datacenter = "${dc}"
-primary_datacenter = "${dc}"
+primary_datacenter = "${primary_dc}"
 data_dir = "$${CONSUL_DATA_DIR}"
 bind_addr = "$${local_ip}"
 client_addr = "0.0.0.0"
