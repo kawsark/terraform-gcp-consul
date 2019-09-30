@@ -172,6 +172,8 @@ sudo systemctl start dnsmasq
 echo "Starting application ${app_name}"
 echo ${app_cmd} > /tmp/app.sh
 chmod +x /tmp/app.sh
+# Clear any previous instances (useful for reprovision scenarios)
+sudo docker rm -f ${app_name} 
 /tmp/app.sh
 
 # Start Envoy proxy
@@ -185,11 +187,14 @@ ENTRYPOINT ["dumb-init", "consul", "connect", "envoy"]
 EOF
 sudo docker build -t consul-envoy .
 
-# Re-register in case there was an issue with Envoy setup
-sleep 5
-consul services register /etc/consul.d/dashboard.json
-sudo docker run --rm -d --network host --name ${app_name}-proxy \
+# Clear any previous instances (useful for reprovision scenarios)
+sudo docker rm -f ${app_name}-proxy
+sudo docker run -d --network host --name ${app_name}-proxy \
   consul-envoy -sidecar-for ${app_name}
+
+# Re-register service in case there was an issue with Envoy setup
+sleep 5
+consul services register $${CONSUL_CONFIG_DIR}/${app_name}.json
 
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
@@ -199,6 +204,8 @@ export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
 PROFILE
 
 # Start mesh gateway
+# Clear any previous instances (useful for reprovision scenarios)
+sudo docker rm -f gateway-${dc}
 sudo docker run -d --network host --name gateway-${dc} \
   consul-envoy -mesh-gateway -register -service "gateway-${dc}" \
   -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 127.0.0.1:19005 

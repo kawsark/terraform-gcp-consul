@@ -163,6 +163,8 @@ sudo systemctl start dnsmasq
 echo "Starting application ${app_name}"
 echo ${app_cmd} > /tmp/app.sh
 chmod +x /tmp/app.sh
+# Clear any previous instances (useful for reprovision scenarios)
+sudo docker rm -f ${app_name}
 /tmp/app.sh
 
 # Start Envoy proxy
@@ -175,8 +177,15 @@ COPY --from=0 /bin/consul /bin/consul
 ENTRYPOINT ["dumb-init", "consul", "connect", "envoy"]
 EOF
 sudo docker build -t consul-envoy .
-sudo docker run --rm -d --network host --name ${app_name}-proxy \
+
+# Clear any previous instances (useful for reprovision scenarios)
+sudo docker rm -f ${app_name}-proxy
+sudo docker run -d --network host --name ${app_name}-proxy \
   consul-envoy -sidecar-for ${app_name}
+
+# Re-register service in case there was an issue with Envoy setup
+sleep 5
+consul services register $${CONSUL_CONFIG_DIR}/${app_name}.json
 
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
