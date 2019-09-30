@@ -24,7 +24,7 @@ resource "google_compute_instance" "demo" {
   tags         = var.tags
 
   boot_disk {
-    source = element(google_compute_disk.os-disk.*.name, count.index)
+    source = google_compute_disk.os-disk[count.index].name
   }
 
   network_interface {
