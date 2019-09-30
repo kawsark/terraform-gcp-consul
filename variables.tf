@@ -24,7 +24,7 @@ variable "consul_license" {
 
 variable "consul_url" {
   description = "enter a Consul download URL here"
-  default     = "https://releases.hashicorp.com/consul/1.5.3/consul_1.5.3_linux_amd64.zip"
+  default     = "https://releases.hashicorp.com/consul/1.6.1/consul_1.6.1_linux_amd64.zip"
 }
 
 variable "create_gossip_encryption_key" {

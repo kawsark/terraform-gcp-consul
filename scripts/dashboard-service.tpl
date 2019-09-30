@@ -194,18 +194,11 @@ export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
 PROFILE
 
 # Start mesh gateway
-sudo docker run --rm -d --network host --name ${dc}-mesh-gateway \
-  consul-envoy -mesh-gateway -register -service "gateway-primary" \
-                                       -address "$${local_ip}:18502" \
-                                       -wan-address "$${nat_ip:18502}" \
-                                       -admin-bind 127.0.0.1:19005
+export local_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)"
+export external_ip="$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)"
 
-
-consul connect envoy -mesh-gateway -register \
-                       -service "gateway-primary" \
-                       -address "<private address>:18502" \
-                       -wan-address "<externally accessible address>:18502"\
-                       -admin-bind 127.0.0.1:19005 \
-                       -token=<bootstrap-token>
+sudo docker run -d --network host --name gateway-${dc} \
+  consul-envoy:latest connect envoy -mesh-gateway -register -service "gateway-${dc}" \
+  -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 127.0.0.1:19005 
 
 echo "~~~~~~~ App startup script - end ~~~~~~~"
