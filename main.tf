@@ -24,7 +24,7 @@ module "consul-cluster" {
   static_ip_array             = var.consul_static_ip_array
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
-  instance_name               = "consul"
+  instance_name               = "consul-${var.consul_dc}"
   use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.consul_userdata.rendered
@@ -49,7 +49,7 @@ module "counting-service" {
 
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
-  instance_name               = "counting-service"
+  instance_name               = "counting-service-${var.consul_dc}"
   use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.counting_userdata.rendered
@@ -74,7 +74,7 @@ module "dashboard-service" {
 
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region
-  instance_name               = "dashboard-service"
+  instance_name               = "dashboard-service-${var.consul_dc}"
   use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.dashboard_userdata.rendered
@@ -99,7 +99,7 @@ module "consul-cluster-secondary" {
   static_ip_array             = var.consul_secondary_static_ip_array
   gcp_project                 = var.gcp_project
   gcp_region                  = var.gcp_region_secondary
-  instance_name               = "consul-docker"
+  instance_name               = "consul-docker-${var.consul_dc_secondary}"
   use_default_service_account = false
   service_account_email       = data.google_compute_default_service_account.default.email
   startup_script              = data.template_file.consul_secondary_userdata.rendered
