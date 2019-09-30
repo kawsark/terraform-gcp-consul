@@ -4,6 +4,7 @@ echo "~~~~~~~ App service startup script - begin ~~~~~~~"
 # Set variables
 export PATH="$${PATH}:/usr/local/bin"
 export local_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)"
+export external_ip="$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)"
 
 #Install Docker
 sudo apt-get update -y
@@ -196,9 +197,6 @@ export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
 PROFILE
 
 # Start mesh gateway
-export local_ip="$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)"
-export external_ip="$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)"
-
 sudo docker run -d --network host --name gateway-${dc} \
   consul-envoy -mesh-gateway -register -service "gateway-${dc}" \
   -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 127.0.0.1:19005 
