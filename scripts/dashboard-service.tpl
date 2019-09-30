@@ -95,7 +95,7 @@ export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
 # Write consul client configuration
 cat <<EOF > /etc/consul.d/client.hcl
 datacenter = "${dc}"
-primary_datacenter = "${dc}"
+primary_datacenter = "${primary_dc}"
 data_dir = "$${CONSUL_DATA_DIR}"
 bind_addr = "$${local_ip}"
 client_addr = "0.0.0.0"
@@ -188,12 +188,13 @@ EOF
 sudo docker build -t consul-envoy .
 
 # Clear any previous instances (useful for reprovision scenarios)
-sudo docker rm -f ${app_name}-proxy
-sudo docker run -d --network host --name ${app_name}-proxy \
+sudo docker rm -f ${app_name}-sidecar-proxy
+sudo docker run -d --network host --name ${app_name}-sidecar-proxy \
   consul-envoy -sidecar-for ${app_name}
 
 # Re-register service in case there was an issue with Envoy setup
-sleep 5
+sleep 10
+consul services deregister $${CONSUL_CONFIG_DIR}/${app_name}.json
 consul services register $${CONSUL_CONFIG_DIR}/${app_name}.json
 
 # Setup bash profile
