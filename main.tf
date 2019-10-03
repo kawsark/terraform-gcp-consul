@@ -80,28 +80,3 @@ module "dashboard-service" {
   startup_script              = data.template_file.dashboard_userdata.rendered
   os_pd_ssd_size              = "12"
 }
-
-module "consul-cluster-secondary" {
-  source = "./google_compute_instance"
-  image  = var.image
-
-  tags = ["consul-${var.gcp_project}-${var.consul_dc_secondary}"]
-
-  labels = {
-    environment = "dev"
-    app         = "consul"
-    ttl         = "24h"
-    owner       = var.owner
-  }
-
-  server_count                = var.create_secondary ? 1 : 0
-  use_static_ip               = true
-  static_ip_array             = var.consul_secondary_static_ip_array
-  gcp_project                 = var.gcp_project
-  gcp_region                  = var.gcp_region_secondary
-  instance_name               = "consul-docker-${var.consul_dc_secondary}"
-  use_default_service_account = false
-  service_account_email       = data.google_compute_default_service_account.default.email
-  startup_script              = data.template_file.consul_secondary_userdata.rendered
-  os_pd_ssd_size              = "12"
-}

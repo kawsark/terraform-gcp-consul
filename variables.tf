@@ -7,16 +7,6 @@ variable "gcp_region" {
   default     = "us-east1"
 }
 
-variable "create_secondary" {
-  description = "Set this to true to create a single Consul server in a secondary region"
-  default     = false
-}
-
-variable "gcp_region_secondary" {
-  description = "secondary region"
-  default     = "us-central1"
-}
-
 variable "retry_join_wan" {
   description = "Optionally provide one or more IP addresses for WAN join"
   default = ""
@@ -60,10 +50,6 @@ variable "primary_dc" {
   default = "us-east1"
 }
 
-variable "consul_dc_secondary" {
-  default = "us-central1"
-}
-
 variable "consul_server_count" {
   default = 3
 }
@@ -76,10 +62,6 @@ variable "environment" {
 variable "consul_static_ip_array" {
   description = "Optionally provide an array of static IP addresses for Consul servers. Otherwise, ephemeral IPs will be assigned"
   default     = ["", "", "", "", ""]
-}
-
-variable "consul_secondary_static_ip_array" {
-  default = [""]
 }
 
 # TLS related variables

@@ -16,16 +16,6 @@ data "template_file" "consul_userdata" {
   }
 }
 
-data "template_file" "consul_secondary_userdata" {
-  template = file("${path.module}/scripts/consul-server-secondary.tpl")
-  vars = {
-    repo_clone_url = "https://github.com/kawsark/docker-consul-connect-demo.git"
-    consul_encrypt = var.create_gossip_encryption_key ? random_id.consul_encrypt.b64_std : var.gossip_encryption_key
-    consul_license = var.consul_license
-    consul_url     = var.consul_url
-  }
-}
-
 data "template_file" "counting_userdata" {
   template = file("${path.module}/scripts/counting-service.tpl")
   vars = {
