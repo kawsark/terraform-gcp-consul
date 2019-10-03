@@ -78,6 +78,10 @@ variable "consul_static_ip_array" {
   default     = ["", "", "", "", ""]
 }
 
+variable "consul_secondary_static_ip_array" {
+  default = ""
+}
+
 # TLS related variables
 variable "common_name" {
   description = "A CN for CA and generated certificates"
