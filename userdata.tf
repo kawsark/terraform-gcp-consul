@@ -6,8 +6,7 @@ data "template_file" "consul_userdata" {
     dc                  = var.consul_dc
     primary_dc          = var.primary_dc
     retry_join          = "[\"provider=gce zone_pattern=${var.gcp_region}-. tag_value=consul-${var.gcp_project}-${var.consul_dc}\"]"
-    #retry_join_wan      = "[\"${element(var.consul_secondary_static_ip_array, 0)}\"]"
-    retry_join_wan      = "[\"var.consul_secondary_static_ip_array[0]\"]"
+    retry_join_wan      = var.retry_join_wan
     consul_server_count = var.consul_server_count
     consul_license      = var.consul_license
     ca_crt              = module.root_tls_self_signed_ca.ca_cert_pem

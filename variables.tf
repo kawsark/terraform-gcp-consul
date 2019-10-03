@@ -17,6 +17,12 @@ variable "gcp_region_secondary" {
   default     = "us-central1"
 }
 
+variable "retry_join_wan" {
+  description = "Optionally provide one or more IP addresses for WAN join"
+  default = ""
+}
+
+
 variable "consul_license" {
   description = "Optionally enter a Consul Enterprise license here. Relevant when using enterprise consul_url."
   default     = "asdf"
@@ -69,11 +75,6 @@ variable "environment" {
 # Optional static IP
 variable "consul_static_ip_array" {
   description = "Optionally provide an array of static IP addresses for Consul servers. Otherwise, ephemeral IPs will be assigned"
-  default     = ["", "", "", "", ""]
-}
-
-variable "consul_secondary_static_ip_array" {
-  description = "Optionally provide an array of static IP addresses for secondary Consul cluster. Otherwise, ephemeral IPs will be assigned"
   default     = ["", "", "", "", ""]
 }
 
