@@ -99,13 +99,13 @@ connect = {
 EOF
 
 # Bootstrap ACL tokens
-cat <<-EOF > $${CONSUL_CONFIG_DIR}/acl.hcl
-acl = {
-  enabled = true,
-  default_policy = "allow",
-  enable_token_persistence = true
-}
-EOF
+#cat <<-EOF > $${CONSUL_CONFIG_DIR}/acl.hcl
+#acl = {
+#  enabled = true,
+#  default_policy = "allow",
+#  enable_token_persistence = true
+#}
+#EOF
 
 chown -R consul:consul "$${CONSUL_CONFIG_DIR}"
 chown -R consul:consul "$${CONSUL_DATA_DIR}"
