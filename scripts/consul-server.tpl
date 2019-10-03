@@ -73,6 +73,7 @@ data_dir = "$${CONSUL_DATA_DIR}"
 bind_addr = "$${local_ip}"
 client_addr = "0.0.0.0"
 bootstrap_expect = ${consul_server_count}
+enable_central_service_config = true
 server = true
 ui = true
 log_level = "trace"

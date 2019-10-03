@@ -96,6 +96,7 @@ export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
 cat <<EOF > /etc/consul.d/client.hcl
 datacenter = "${dc}"
 primary_datacenter = "${primary_dc}"
+enable_central_service_config = true
 data_dir = "$${CONSUL_DATA_DIR}"
 bind_addr = "$${local_ip}"
 client_addr = "0.0.0.0"
