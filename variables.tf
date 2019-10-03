@@ -79,7 +79,7 @@ variable "consul_static_ip_array" {
 }
 
 variable "consul_secondary_static_ip_array" {
-  default = ""
+  default = [""]
 }
 
 # TLS related variables
