@@ -191,7 +191,7 @@ sudo docker build -t consul-envoy .
 # Clear any previous instances (useful for reprovision scenarios)
 sudo docker rm -f ${app_name}-sidecar-proxy
 sudo docker run -d --network host --name ${app_name}-sidecar-proxy \
-  consul-envoy -sidecar-for ${app_name}
+  consul-envoy -sidecar-for ${app_name} -admin-bind 0.0.0.0:19000
 
 # Re-register service in case there was an issue with Envoy setup
 sleep 10
@@ -210,6 +210,6 @@ PROFILE
 sudo docker rm -f gateway-${dc}
 sudo docker run -d --network host --name gateway-${dc} \
   consul-envoy -mesh-gateway -register -service "gateway-${dc}" \
-  -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 127.0.0.1:19005 
+  -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 0.0.0.0:19005 
 
 echo "~~~~~~~ App startup script - end ~~~~~~~"

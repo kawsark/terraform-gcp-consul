@@ -182,7 +182,7 @@ sudo docker build -t consul-envoy .
 # Clear any previous instances (useful for reprovision scenarios)
 sudo docker rm -f ${app_name}-sidecar-proxy
 sudo docker run -d --network host --name ${app_name}-sidecar-proxy \
-  consul-envoy -sidecar-for ${app_name}
+  consul-envoy -sidecar-for ${app_name} -admin-bind 0.0.0.0:19000
 
 # Re-register service in case there was an issue with Envoy setup
 sleep 5
