@@ -1,8 +1,3 @@
-provider "google" {
-  region  = var.gcp_region
-  project = var.gcp_project
-}
-
 data "google_compute_zones" "available" {
   region  = var.gcp_region
   project = var.gcp_project

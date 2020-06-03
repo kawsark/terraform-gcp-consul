@@ -31,7 +31,7 @@ module "leaf_tls_self_signed_cert" {
   ca_override       = true
   ca_key_override   = module.root_tls_self_signed_ca.ca_private_key_pem
   ca_cert_override  = module.root_tls_self_signed_ca.ca_cert_pem
-  download_certs    = "true"
+  download_certs    = "false"
 
   validity_period_hours = "8760"
 

@@ -8,8 +8,8 @@ variable "gcp_region" {
 }
 
 variable "retry_join_wan" {
-  description = "Optionally provide one or more IP addresses for WAN join"
-  default = ""
+  description = "Optionally provide one or more IP addresses for WAN join, defaults to empty string"
+  default = "[\"\"]"
 }
 
 
@@ -35,7 +35,7 @@ variable "gossip_encryption_key" {
 
 variable "image" {
   description = "An OS image to provision: https://cloud.google.com/compute/docs/images#os-compute-support"
-  default     = "ubuntu-os-cloud/ubuntu-1604-lts"
+  default     = "ubuntu-os-cloud/ubuntu-1804-lts"
 }
 
 variable "owner" {

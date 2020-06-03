@@ -76,7 +76,7 @@ export CONSUL_HTTP_TOKEN=<bootstrap-acl-token>
 ./1_acl_consul.sh
 ```
 
-3. Run the [2_acl_vault.sh](scripts/2_acl_vault.sh) script on Vault server nodes. Please export the bootstrap token prior to running the script. Example commands are below. 
+3. This step is only relevant if you are going to use Consul as a backend for Vault. Run the [2_acl_vault.sh](scripts/2_acl_vault.sh) script on Vault server nodes. Please export the bootstrap token prior to running the script. Example commands are below. 
 ```
 # vault-0 server
 gcloud compute --project "<project-name>" ssh --zone "us-east1-b" "vault-0"

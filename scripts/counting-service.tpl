@@ -31,7 +31,7 @@ sudo apt install curl unzip jq -y
 
 
 # Download vault and consul
-echo "Downloading consul and vault"
+echo "Downloading consul"
 apt install curl unzip -y
 cd /tmp
 curl "${consul_url}" -o consul.zip
@@ -88,9 +88,13 @@ cat <<EOF | sudo tee "$${CONSUL_TLS_DIR}/consul.key"
 ${leaf_key}
 EOF
 
+# https://www.consul.io/docs/commands
+export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 export CONSUL_HTTP_SSL_VERIFY=false
+export CONSUL_HTTP_SSL=true
 export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
-#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
+export CONSUL_GRPC_ADDR="http://127.0.0.1:8502"
+
 
 # Write consul client configuration
 cat <<EOF > /etc/consul.d/client.hcl
@@ -107,11 +111,15 @@ retry_join = ${retry_join}
 encrypt = "${consul_encrypt}"
 encrypt_verify_incoming = true
 encrypt_verify_outgoing = true
-#ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
-#cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
-#key_file = "$${CONSUL_TLS_DIR}/consul.key"
+ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
+cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
+key_file = "$${CONSUL_TLS_DIR}/consul.key"
 verify_incoming = false
 verify_incoming_https = false
+verify_incoming_rpc = false
+#auto_encrypt = {
+#  tls = true
+#}
 ports = {
   http = 8500,
   https = -1,
@@ -147,6 +155,9 @@ chown -R consul:consul "$${CONSUL_CONFIG_DIR}"
 chown -R consul:consul "$${CONSUL_DATA_DIR}"
 chown -R consul:consul "$${CONSUL_TLS_DIR}"
 
+# Adding 180 seconds delay for consul servers
+echo "~~~~~~ Going to sleep for 180 seconds to allow Consul server start ~~~~~"
+
 echo "Starting consul client"
 systemctl enable consul.service
 systemctl daemon-reload
@@ -159,6 +170,10 @@ echo "server=/consul/127.0.0.1#8600" | sudo tee /etc/dnsmasq.d/10-consul
 sudo apt-get install dnsmasq -y
 sudo systemctl enable dnsmasq
 sudo systemctl start dnsmasq
+
+# Remove any existing containers or images
+docker rm -f $(docker ps -aq)
+docker rmi $(docker images -q)
 
 # Run application
 echo "Starting application ${app_name}"
@@ -173,8 +188,12 @@ sleep 10
 echo "Starting application proxy"
 cat <<EOF >Dockerfile
 FROM consul:latest
-FROM envoyproxy/envoy:v1.8.0
+FROM envoyproxy/envoy:v1.13.1
+RUN cat /etc/os-release
 COPY --from=0 /bin/consul /bin/consul
+RUN apt-get update -y && apt-get install wget -y
+RUN wget -O /bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64
+RUN chmod +x /bin/dumb-init
 ENTRYPOINT ["dumb-init", "consul", "connect", "envoy"]
 EOF
 sudo docker build -t consul-envoy .
@@ -192,7 +211,7 @@ consul services register $${CONSUL_CONFIG_DIR}/${app_name}.json
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
 export CONSUL_HTTP_SSL_VERIFY=false
 export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
-#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
+export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 PROFILE
 
 echo "~~~~~~~ App startup script - end ~~~~~~~"

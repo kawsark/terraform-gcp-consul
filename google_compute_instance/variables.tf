@@ -42,7 +42,7 @@ variable "instance_name" {
 
 variable "image" {
   description = "image to build instance from in the format: image-family/os. See: https://cloud.google.com/compute/docs/images#os-compute-support"
-  default     = "ubuntu-os-cloud/ubuntu-1404-lts"
+  default     = "ubuntu-os-cloud/ubuntu-1804-lts"
 }
 
 variable "startup_script" {

@@ -83,14 +83,18 @@ advertise_addr_wan = "$${nat_ip}"
 encrypt = "${consul_encrypt}"
 encrypt_verify_incoming = true
 encrypt_verify_outgoing = true
-#ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
-#cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
-#key_file = "$${CONSUL_TLS_DIR}/consul.key"
+ca_file = "$${CONSUL_TLS_DIR}/consul-ca.crt"
+cert_file = "$${CONSUL_TLS_DIR}/consul.crt"
+key_file = "$${CONSUL_TLS_DIR}/consul.key"
 verify_incoming = false
 verify_incoming_https = false
+verify_incoming_rpc = false
+auto_encrypt = {
+    allow_tls = true
+  }
 ports = {
   http = 8500,
-  https = -1,
+  https = 8501,
   grpc = 8502
 }
 connect = {
@@ -159,8 +163,8 @@ echo "Consul license status: $(consul license get)"
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
 export CONSUL_HTTP_SSL_VERIFY=false
-export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
-#export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
+export CONSUL_HTTP_ADDR="http://127.0.0.1:8501"
+export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 PROFILE
 
 echo "~~~~~~~ Consul startup script - end ~~~~~~~"
