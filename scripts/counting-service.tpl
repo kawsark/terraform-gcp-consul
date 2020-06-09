@@ -194,14 +194,14 @@ COPY --from=0 /bin/consul /bin/consul
 RUN apt-get update -y && apt-get install wget -y
 RUN wget -O /bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64
 RUN chmod +x /bin/dumb-init
-ENTRYPOINT ["dumb-init", "consul", "connect", "envoy"]
+ENTRYPOINT ["dumb-init"]
 EOF
 sudo docker build -t consul-envoy .
 
 # Clear any previous instances (useful for reprovision scenarios)
 sudo docker rm -f ${app_name}-sidecar-proxy
 sudo docker run -d --network host --name ${app_name}-sidecar-proxy \
-  consul-envoy -sidecar-for ${app_name} -admin-bind 0.0.0.0:19000
+  consul-envoy consul connect envoy -sidecar-for ${app_name} -admin-bind 0.0.0.0:19000
 
 # Re-register service in case there was an issue with Envoy setup
 sleep 5
