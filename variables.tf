@@ -20,7 +20,7 @@ variable "consul_license" {
 
 variable "consul_url" {
   description = "enter a Consul download URL here"
-  default     = "https://releases.hashicorp.com/consul/1.6.1/consul_1.6.1_linux_amd64.zip"
+  default     = "https://releases.hashicorp.com/consul/1.8.0/consul_1.8.0_linux_amd64.zip"
 }
 
 variable "create_gossip_encryption_key" {
@@ -58,6 +58,18 @@ variable "environment" {
   default = "lab"
 }
 
+# Deploy applications
+variable "apps" {
+  type = map
+  description = "Use the format: app_name = [\"tag\",\"app_port\",\"start_command\"]"
+  default = {
+    counting = ["v0.0.2", "9001", "sudo docker run --net=host -p 9001:9001 -d --name counting hashicorp/counting-service:0.0.2"]
+    dashboard = ["v0.0.4", "9002", "sudo docker run --net=host -d -e=COUNTING_SERVICE_URL=http://localhost:5000 --name dashboard hashicorp/dashboard-service:0.0.4"]
+    hashicat-url = ["v1", "9090", "sudo docker run --net=host -d -e=MESSAGE=\"{\"url\":\"http://placekitten.com/800/500\"}\" -e=LISTEN_ADDR=\"0.0.0.0:9090\" -e=NAME=hashicat-url --name hashicat-url nicholasjackson/fake-service:v0.10.0"]
+    hashicat-metadata = ["v1", "9190", "sudo docker run --net=host -d -e=MESSAGE=\"{\"enable_ratings\":\"True\",\"caption\":\"Welcome to Cam Meowlicious App\"}\" -e=LISTEN_ADDR=\"0.0.0.0:9190\" -e=NAME=hashicat-metadata --name hashicat-metadata nicholasjackson/fake-service:v0.10.0"]
+  }
+}
+
 # Optional static IP
 variable "consul_static_ip_array" {
   description = "Optionally provide an array of static IP addresses for Consul servers. Otherwise, ephemeral IPs will be assigned"
@@ -67,7 +79,7 @@ variable "consul_static_ip_array" {
 # TLS related variables
 variable "common_name" {
   description = "A CN for CA and generated certificates"
-  default     = "therealk.com"
+  default     = "consul-gcp.hashidemos.io"
 }
 
 variable "organization_name" {

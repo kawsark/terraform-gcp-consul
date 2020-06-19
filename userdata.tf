@@ -21,9 +21,13 @@ data "template_file" "counting_userdata" {
   vars = {
     consul_url     = var.consul_url
     app_name       = "counting"
-    app_tag        = "v0.0.2"
-    app_port       = "9001"
-    app_cmd        = "sudo docker run --net=host -p 9001:9001 -d --name counting hashicorp/counting-service:0.0.2"
+    app_tag        = var.apps["counting"][0]
+    app_port       = var.apps["counting"][1]
+    app_cmd        = var.apps["counting"][2]
+    app2_name       = "hashicat-url"
+    app2_tag        = var.apps["hashicat-url"][0]
+    app2_port       = var.apps["hashicat-url"][1]
+    app2_cmd        = var.apps["hashicat-url"][2]    
     gcp_project    = var.gcp_project
     gcp_region     = var.gcp_region
     dc             = var.consul_dc
@@ -42,9 +46,13 @@ data "template_file" "dashboard_userdata" {
   vars = {
     consul_url     = var.consul_url
     app_name       = "dashboard"
-    app_tag        = "v0.0.4"
-    app_port       = "9002"
-    app_cmd        = "sudo docker run --net=host -d -e=COUNTING_SERVICE_URL=http://localhost:5000 --name dashboard hashicorp/dashboard-service:0.0.4"
+    app_tag        = var.apps["dashboard"][0]
+    app_port       = var.apps["dashboard"][1]
+    app_cmd        = var.apps["dashboard"][2]
+    app2_name       = "hashicat-metadata"
+    app2_tag        = var.apps["hashicat-metadata"][0]
+    app2_port       = var.apps["hashicat-metadata"][1]
+    app2_cmd        = var.apps["hashicat-metadata"][2]    
     gcp_project    = var.gcp_project
     gcp_region     = var.gcp_region
     dc             = var.consul_dc

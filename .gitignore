@@ -1,5 +1,8 @@
 *~
 
+# Downloaded .pem files
+*.pem
+
 #  Local .terraform directories
 **/.terraform/*
 

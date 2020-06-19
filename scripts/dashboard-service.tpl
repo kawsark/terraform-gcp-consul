@@ -91,7 +91,7 @@ EOF
 # https://www.consul.io/docs/commands
 export CONSUL_CACERT="$${CONSUL_TLS_DIR}/consul-ca.crt"
 export CONSUL_HTTP_SSL_VERIFY=false
-export CONSUL_HTTP_SSL=true
+export CONSUL_HTTP_SSL=false
 export CONSUL_HTTP_ADDR="http://127.0.0.1:8500"
 export CONSUL_GRPC_ADDR="http://127.0.0.1:8502"
 
@@ -117,9 +117,9 @@ key_file = "$${CONSUL_TLS_DIR}/consul.key"
 verify_incoming = false
 verify_incoming_https = false
 verify_incoming_rpc = false
-#auto_encrypt = {
-#  tls = true
-#}
+auto_encrypt = {
+  tls = true
+}
 ports = {
   http = 8500,
   https = -1,
@@ -160,6 +160,29 @@ cat <<EOF > "$${CONSUL_CONFIG_DIR}/${app_name}.json"
 }
 EOF
 
+echo "writing service definition file for ${app2_name}"
+cat <<EOF > "$${CONSUL_CONFIG_DIR}/${app2_name}.json"
+{
+  "service": {
+    "name": "${app2_name}",
+    "tags": [
+      "${app2_tag}"
+    ],
+    "port": ${app2_port},
+    "connect": {
+      "sidecar_service": {} 
+    },
+    "check": {
+      "id":"${app2_name}-http-check",
+      "name":"HTTP health check on port ${app2_port}",
+      "method": "GET",
+      "http": "http://$${local_ip}:${app2_port}/health",
+      "Interval": "2s"
+    }
+  }
+}
+EOF
+
 chown -R consul:consul "$${CONSUL_CONFIG_DIR}"
 chown -R consul:consul "$${CONSUL_DATA_DIR}"
 chown -R consul:consul "$${CONSUL_TLS_DIR}"
@@ -192,6 +215,15 @@ chmod +x /tmp/app.sh
 sudo docker rm -f ${app_name} 
 /tmp/app.sh
 
+# Run application 2
+echo "Starting application ${app2_name}"
+echo ${app2_cmd} > /tmp/app2.sh
+cat /tmp/app2.sh | sed -e s/'{'/'"{'/ -e s/'}'/'}"'/ > /tmp/app2.sed.sh
+chmod +x /tmp/app2.sed.sh
+# Clear any previous instances (useful for reprovision scenarios)
+sudo docker rm -f ${app2_name} 
+/tmp/app2.sed.sh
+
 # Start Envoy proxy
 sleep 10
 echo "Starting application proxy"
@@ -212,10 +244,16 @@ sudo docker rm -f ${app_name}-sidecar-proxy
 sudo docker run -d --network host --name ${app_name}-sidecar-proxy \
   consul-envoy consul connect envoy -sidecar-for ${app_name} -admin-bind 0.0.0.0:19000
 
+sudo docker rm -f ${app2_name}-sidecar-proxy
+sudo docker run -d --network host --name ${app2_name}-sidecar-proxy \
+  consul-envoy consul connect envoy -sidecar-for ${app2_name} -admin-bind 0.0.0.0:19001
+
 # Re-register service in case there was an issue with Envoy setup
 sleep 10
 consul services deregister $${CONSUL_CONFIG_DIR}/${app_name}.json
 consul services register $${CONSUL_CONFIG_DIR}/${app_name}.json
+consul services deregister $${CONSUL_CONFIG_DIR}/${app2_name}.json
+consul services register $${CONSUL_CONFIG_DIR}/${app2_name}.json
 
 # Setup bash profile
 cat <<PROFILE | sudo tee /etc/profile.d/consul.sh
@@ -227,8 +265,8 @@ PROFILE
 # Start mesh gateway
 # Clear any previous instances (useful for reprovision scenarios)
 sudo docker rm -f gateway-${dc}
-sudo docker run -d --network host --name gateway-${dc} \
-  consul-envoy consul connect envoy -mesh-gateway -register -service "gateway-${dc}" \
+sudo docker run -d --network host --name gateway-${dc} -v "$${CONSUL_TLS_DIR}/consul-ca.crt:/consul-ca.crt" \
+  consul-envoy consul connect envoy -mesh-gateway -register -service "gateway-${dc}" -ca-file=/consul-ca.crt \
   -address "$${local_ip}:18502" -wan-address "$${external_ip}:18502" -admin-bind 0.0.0.0:19005 
 
 echo "~~~~~~~ App startup script - end ~~~~~~~"

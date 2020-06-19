@@ -43,6 +43,7 @@ module "leaf_tls_self_signed_cert" {
     "*.${var.consul_dc}.consul",
     "server.${var.consul_dc}.consul",
     "*.${var.consul_dc}.consul",
+    var.common_name
   ]
 
   ip_addresses = [
